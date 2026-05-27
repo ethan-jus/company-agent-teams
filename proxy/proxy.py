@@ -14,6 +14,7 @@ import time
 import urllib.request
 import urllib.error
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from datetime import datetime, timezone
 from urllib.parse import urlparse, parse_qs
 
@@ -278,9 +279,15 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
 # ── 启动 ────────────────────────────────────────────────
 
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """多线程 HTTP 服务器，并发处理请求不阻塞"""
+    allow_reuse_address = True
+    daemon_threads = True
+
+
 if __name__ == "__main__":
     init_db()
-    server = HTTPServer(("0.0.0.0", PROXY_PORT), ProxyHandler)
+    server = ThreadedHTTPServer(("0.0.0.0", PROXY_PORT), ProxyHandler)
     print(f"Proxy listening on http://localhost:{PROXY_PORT}")
     try:
         server.serve_forever()
