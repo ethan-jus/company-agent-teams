@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公司 AI Agent 管理面板</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f6fa; color: #333; padding: 24px; }
+.container { max-width: 1200px; margin: 0 auto; }
+h1 { font-size: 24px; margin-bottom: 24px; }
+h2 { font-size: 18px; margin-bottom: 12px; }
+.card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+th { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+.badge-green { background: #e8f5e9; color: #2e7d32; }
+.badge-red { background: #fbe9e7; color: #c62828; }
+.progress { background: #e0e0e0; border-radius: 4px; height: 8px; width: 120px; display: inline-block; vertical-align: middle; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+.btn { display: inline-block; padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; }
+.btn-primary { background: #1976d2; color: #fff; }
+.btn-danger { background: #d32f2f; color: #fff; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.quota-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.quota-card { background: #fafafa; border-radius: 8px; padding: 16px; border: 1px solid #eee; }
+.quota-card h3 { font-size: 15px; margin-bottom: 8px; }
+.quota-card .value { font-size: 24px; font-weight: 700; color: #1976d2; }
+.quota-card .label { font-size: 12px; color: #999; }
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal-content { background: #fff; border-radius: 12px; padding: 24px; min-width: 400px; max-width: 600px; }
+.modal-content h2 { margin-bottom: 16px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
+.form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.hidden { display: none; }
+.tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+.tab { padding: 10px 20px; cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tab.active { border-bottom-color: #1976d2; color: #1976d2; font-weight: 600; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: #333; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 200; opacity: 0; transition: opacity .3s; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>AI Agent 管理面板</h1>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="users">用户管理</div>
+    <div class="tab" data-tab="quota">额度管理</div>
+    <div class="tab" data-tab="settings">全局设置</div>
+  </div>
+
+  <div id="tab-users" class="tab-content">
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>飞书名称</th>
+            <th>Agent 名称</th>
+            <th>角色</th>
+            <th>open_id</th>
+            <th>状态</th>
+            <th>月用量</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="user-table-body">
+          <tr><td colspan="7" style="text-align:center;color:#999;">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-quota" class="tab-content hidden">
+    <div class="card">
+      <h2>每用户用量</h2>
+      <div class="quota-grid" id="quota-grid">
+        <div style="color:#999;text-align:center;padding:40px;">加载中...</div>
+      </div>
+      <button class="btn btn-danger" onclick="resetAllQuota()">重置所有月度计数</button>
+    </div>
+  </div>
+
+  <div id="tab-settings" class="tab-content hidden">
+    <div class="card">
+      <h2>全局默认额度</h2>
+      <div class="form-group">
+        <label>月度 Token 上限</label>
+        <input type="number" id="default-monthly-tokens" value="5000000" />
+      </div>
+      <div class="form-group">
+        <label>每分钟请求上限</label>
+        <input type="number" id="default-rate" value="10" />
+      </div>
+      <div class="form-group">
+        <label>每日告警 Token 数</label>
+        <input type="number" id="default-warn" value="400000" />
+      </div>
+      <button class="btn btn-primary" onclick="saveDefaults()">保存全局设置</button>
+    </div>
+  </div>
+</div>
+
+<div id="edit-modal" class="modal hidden">
+  <div class="modal-content">
+    <h2>编辑用户</h2>
+    <div class="form-group"><label>Agent 名称</label><input id="edit-agent-name" /></div>
+    <div class="form-group"><label>角色</label><input id="edit-role" /></div>
+    <div class="form-group"><label>月度 Token 上限</label><input id="edit-quota" type="number" /></div>
+    <div class="form-group"><label>每分钟请求上限</label><input id="edit-rate" type="number" /></div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveUser()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let users = [];
+let editingOpenId = null;
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+    document.getElementById("tab-" + tab.dataset.tab).classList.remove("hidden");
+  });
+});
+
+async function loadUsers() {
+  const resp = await fetch("/api/users");
+  const data = await resp.json();
+  users = data.users;
+  renderUsers();
+  renderQuota();
+  document.getElementById("default-monthly-tokens").value = data.defaults.monthly_tokens;
+  document.getElementById("default-rate").value = data.defaults.rate_per_minute;
+  document.getElementById("default-warn").value = data.defaults.daily_warn_tokens;
+}
+
+function renderUsers() {
+  const tbody = document.getElementById("user-table-body");
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">暂无用户，新用户通过飞书自动注册</td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td><strong>${u.feishu_name || '-'}</strong></td>
+      <td>${u.agent_name || '-'}</td>
+      <td>${u.role || '-'}</td>
+      <td style="font-family:monospace;font-size:12px;color:#999;">${u.open_id.slice(0,20)}...</td>
+      <td><span class="badge ${u.enabled ? 'badge-green' : 'badge-red'}">${u.enabled ? '启用' : '停用'}</span></td>
+      <td>
+        <div class="progress"><div class="progress-fill" style="width:${Math.min(u.percent,100)}%;background:${u.percent > 90 ? '#d32f2f' : u.percent > 70 ? '#f57c00' : '#1976d2'}"></div></div>
+        ${(u.monthly_tokens || 0).toLocaleString()} / ${(u.monthly_limit || 0).toLocaleString()}
+      </td>
+      <td>
+        <button class="btn btn-primary btn-sm" onclick="editUser('${u.open_id}')">编辑</button>
+        <button class="btn btn-sm ${u.enabled ? 'btn-danger' : 'btn-primary'}" onclick="toggleUser('${u.open_id}', ${!u.enabled})">${u.enabled ? '停用' : '启用'}</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function renderQuota() {
+  const grid = document.getElementById("quota-grid");
+  if (users.length === 0) {
+    grid.innerHTML = '<div style="color:#999;text-align:center;padding:40px;">暂无数据</div>';
+    return;
+  }
+  grid.innerHTML = users.map(u => {
+    const pct = Math.min(u.percent, 100);
+    const color = pct > 90 ? '#d32f2f' : pct > 70 ? '#f57c00' : '#1976d2';
+    return `<div class="quota-card">
+      <h3>${u.feishu_name || u.agent_name || u.open_id}</h3>
+      <div class="value">${(u.monthly_tokens || 0).toLocaleString()}</div>
+      <div class="label">/${(u.monthly_limit || 0).toLocaleString()} Token（${u.percent}%）</div>
+      <div style="margin-top:8px;background:#e0e0e0;border-radius:4px;height:6px;">
+        <div style="height:100%;border-radius:4px;width:${pct}%;background:${color};"></div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function editUser(openId) {
+  const u = users.find(x => x.open_id === openId);
+  if (!u) return;
+  editingOpenId = openId;
+  document.getElementById("edit-agent-name").value = u.agent_name || "";
+  document.getElementById("edit-role").value = u.role || "";
+  document.getElementById("edit-quota").value = u.monthly_limit || 5000000;
+  document.getElementById("edit-rate").value = 10;
+  document.getElementById("edit-modal").classList.remove("hidden");
+}
+
+function closeModal() {
+  document.getElementById("edit-modal").classList.add("hidden");
+  editingOpenId = null;
+}
+
+async function saveUser() {
+  if (!editingOpenId) return;
+  await fetch(`/api/users/${editingOpenId}`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      role: document.getElementById("edit-role").value,
+      quota: {
+        monthly_tokens: parseInt(document.getElementById("edit-quota").value) || 5000000,
+        rate_per_minute: parseInt(document.getElementById("edit-rate").value) || 10,
+      }
+    })
+  });
+  closeModal();
+  showToast("用户已更新");
+  loadUsers();
+}
+
+async function toggleUser(openId, enabled) {
+  await fetch(`/api/users/${openId}`, {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ enabled })
+  });
+  showToast(enabled ? "用户已启用" : "用户已停用");
+  loadUsers();
+}
+
+async function resetAllQuota() {
+  if (!confirm("确认重置所有用户的月度计数？")) return;
+  await fetch("/api/quota/reset", { method: "POST", headers: {"Content-Type": "application/json"}, body: "{}" });
+  showToast("已重置所有月度计数");
+  loadUsers();
+}
+
+async function saveDefaults() {
+  await fetch("/api/quota/defaults", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      monthly_tokens: parseInt(document.getElementById("default-monthly-tokens").value) || 5000000,
+      rate_per_minute: parseInt(document.getElementById("default-rate").value) || 10,
+      daily_warn_tokens: parseInt(document.getElementById("default-warn").value) || 400000,
+    })
+  });
+  showToast("全局设置已保存");
+}
+
+loadUsers();
+</script>
+</body>
+</html>
