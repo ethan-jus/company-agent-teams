@@ -1,6 +1,5 @@
 @echo off
-echo Stopping all components...
-taskkill /fi "WINDOWTITLE eq QuotaProxy" /f > nul 2>&1
-taskkill /fi "WINDOWTITLE eq AdminPanel" /f > nul 2>&1
-taskkill /fi "WINDOWTITLE eq ClaudeCode" /f > nul 2>&1
-echo All components stopped.
+echo Stopping proxy and admin panel...
+taskkill /fi "WINDOWTITLE eq proxy" /f > nul 2>&1
+taskkill /fi "WINDOWTITLE eq admin" /f > nul 2>&1
+echo Done.
