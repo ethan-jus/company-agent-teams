@@ -5,8 +5,8 @@ cd /d "%~dp0.."
 set PYTHON=C:\Python314\python.exe
 
 :: Kill old processes on ports 8800 and 5000 (if any)
-powershell -Command "Get-NetTCPConnection -LocalPort 8800 -ErrorAction SilentlyContinue | ForEach-Object { taskkill /f /pid $_.OwningProcess > nul } 2>$null"
-powershell -Command "Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue | ForEach-Object { taskkill /f /pid $_.OwningProcess > nul } 2>$null"
+powershell -Command "Get-NetTCPConnection -LocalPort 8800 -ErrorAction SilentlyContinue | ForEach-Object { taskkill /f /pid $_.OwningProcess } 2>$null" >nul 2>&1
+powershell -Command "Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue | ForEach-Object { taskkill /f /pid $_.OwningProcess } 2>$null" >nul 2>&1
 timeout /t 1 /nobreak > nul
 
 :: Step 1: Start quota proxy
