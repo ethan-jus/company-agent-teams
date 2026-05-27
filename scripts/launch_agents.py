@@ -1,87 +1,70 @@
-"""启动 Agent Teams — admin 路由飞书消息给对应 Agent"""
-import json, subprocess
+"""启动系统 — 后台 Dispatcher + 主 Claude Code（飞书消息路由）"""
+import json, subprocess, threading, time
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
-AGENCY = (BASE / "config" / "AGENCY.md").read_text("utf-8").strip()
 ROUTING = json.loads((BASE / "config" / "user-routing.json").read_text("utf-8"))
 
-agents = {}
+# ── 1. 启动 Dispatcher（后台，管理各 Agent 进程）──
+dispatcher = subprocess.Popen(
+    ["C:/Python314/python.exe", str(BASE / "scripts" / "agent_dispatcher.py")],
+    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+)
+time.sleep(3)
 
-# admin Agent — 消息路由 + 系统管理
-agents["admin"] = {
-    "description": "系统管理员 / 消息路由",
-    "prompt": f"""# admin Agent — 系统管理员 & 消息路由
+# 读取 dispatcher 输出确认启动成功
+line = dispatcher.stdout.readline() if dispatcher.stdout else ""
+print(line)
 
-## 核心职责
+# ── 2. 构建主 session 的系统提示 ──
+user_list = "\n".join([
+    f"  - <channel user=\"{oid}\"> → agent \"{info['agent_name']}\" ({info['feishu_name']} - {info['role']})"
+    for oid, info in ROUTING.items() if info.get("enabled", True)
+])
 
-### 1. 飞书消息路由（最重要）
-当飞书消息通过 channel 到达时：
-1. 查看 <channel user="ou_xxx"> 中的 open_id
-2. 打开 config/user-routing.json 查对应用户
-3. 用 @Agent名 将请求委托给对应用户的个人 Agent
-4. 例如：赵奕然发来消息 → @"小然" 赵奕然说：...
+system_prompt = f"""# AI 助手消息路由器
 
-### 2. 跨 Agent 写入
-其他 Agent 需要修改配置或跨 Agent 数据时，由 admin 执行。
+你的职责只有一个：收到飞书消息后，转发给对应的 Agent 处理并回复。
 
-### 3. 用户注册
-新用户发消息时，执行注册流程。
+## 工作流程
 
-## 各 Agent 对应关系
-""",
-}
+1. 收到飞书 channel 消息时，查看 <channel user="ou_xxx"> 的 open_id
+2. 根据 open_id 确定对应的 agent 名称
+3. 调用 Dispatcher API 处理（会并行执行，不阻塞）：
+   curl -s http://localhost:9100/dispatch -H "Content-Type: application/json" -d '{{"agent":"AGENT名","message":"消息内容"}}'
+4. 收到 API 返回的 response 后，用 reply 工具回复给飞书用户
 
-for open_id, info in ROUTING.items():
-    agent_dir = BASE / "agents" / open_id
-    identity = (agent_dir / "IDENTITY.md").read_text("utf-8") if (agent_dir / "IDENTITY.md").exists() else ""
-    sop = (agent_dir / "SOP.md").read_text("utf-8") if (agent_dir / "SOP.md").exists() else ""
+## 用户映射
+{user_list}
 
-    agents[info["agent_name"]] = {
-        "description": f"{info['feishu_name']} 的个人助手 - {info['role']}",
-        "prompt": f"""{identity}
-
-你的专属工作流程（SOP）：
-{sop}
-
-全局规章（必须遵守）：
-{AGENCY[:800]}
-
-## 协作方式
-- 当 admin 用 @{info['agent_name']} 把任务委托给你时，处理该任务
-- 处理完毕后直接回复（回复会自动通过飞书 channel 发送给用户）
-- 如果需要其他 Agent 的信息，用 @Agent名 请求协作
-- 需要写入其他 Agent 数据时，请 @admin 处理
-""",
-    }
-
-    # 在 admin 的 prompt 中追加用户映射
-    agents["admin"]["prompt"] += f"\n- <channel user=\"{open_id}\"> → @{info['agent_name']}（{info['feishu_name']}）"
-
-agents["admin"]["prompt"] += f"""
-
-## 路由规则
-- 查不到 open_id 的用户 → 触发注册流程
-- 跨 Agent 写入请求 → admin 亲自处理
-- 其他管理操作（额度、配置） → admin 亲自处理
-
-## 规章
-{AGENCY[:800]}
+## 注意事项
+- 不要自己处理用户的问题，直接转发给 Dispatcher API
+- 每个用户的消息是独立并行的，不要等前一个处理完再发下一个
+- 如果 Dispatcher 返回超时或错误，告知用户"系统繁忙，请稍后重试"
 """
 
+prompt_file = BASE / ".claude_system_prompt.md"
+prompt_file.write_text(system_prompt, "utf-8")
+
+# ── 3. 启动主 Claude Code ──
 cmd = [
     "claude",
     "--dangerously-load-development-channels", "plugin:feishu@claude-code-feishu-channel",
     "--settings", str(BASE / "config" / "agent-teams-settings.json"),
-    "--agent", "admin",
-    "--agents", json.dumps(agents, ensure_ascii=False),
+    "--system-prompt-file", str(prompt_file),
 ]
 
 print("=" * 50)
-print("Agent Teams 启动，成员：")
-for name, cfg in agents.items():
-    print(f"  [{name}] {cfg['description']}")
-print("  └ admin 负责路由飞书消息 @对应Agent")
+print("系统启动完毕")
+print(f"  Dispatcher -> http://localhost:9100 (管理 Agent 进程)")
+print(f"  用户映射:")
+for oid, info in ROUTING.items():
+    if info.get("enabled", True):
+        print(f"    {info['feishu_name']} → {info['agent_name']}")
 print("=" * 50)
 
 subprocess.run(cmd)
+
+# 清理
+prompt_file.unlink(missing_ok=True)
+dispatcher.terminate()
