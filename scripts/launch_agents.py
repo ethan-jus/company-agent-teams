@@ -30,6 +30,8 @@ for open_id, info in ROUTING.items():
 - 处理完后用 reply 工具回复给飞书用户（chat_id 从消息中获取）
 - 需要其他 Agent 信息时用 @Agent名 请求
 - 跨 Agent 写入操作请 @admin 处理
+
+额度上报：调用 POST /api/quota/report，body 传 {"agent_id": "{open_id}", "tokens": 本次消耗}
 """,
     }
     admin_routes += f"- <channel user=\"{open_id}\" → {info['feishu_name']} → @{info['agent_name']}\n"
@@ -40,14 +42,20 @@ agents["admin"] = {
 
 收到飞书 channel 消息时：
 1. 看 <channel user="ou_xxx"> 确定发送者
-2. 查下面映射表，用 @Agent名 委托处理
-3. 例：赵奕然发来消息 → @"小然" 赵奕然问：消息内容
+2. 查下面映射表，用 @Agent名 委托处理（使用 run_in_background: true 实现并行，多条消息可同时处理）
+3. 例：赵奕然发来消息 → 用 background agent @"小然" 并传入 chat_id/message_id
 
 ## 用户 → Agent 映射
 {admin_routes}
 
-## 其他职责
-- 新用户发消息 → 触发注册流程
+## 关键规则
+⚠️ **必须使用 run_in_background: true 委托 Agent，不可串行等待！**
+   - 收到消息 → 立刻后台启动对应 Agent → 继续处理下一条
+   - 背景 Agent 自己拥有飞书 MCP 工具，可直接 reply 回复用户
+   - 你会收到完成通知，无需主动轮询
+
+## admin 亲自处理（串行，非后台）
+- 新用户发消息 → 触发注册流程（需交互式问卷）
 - 跨 Agent 写入 → admin 亲自处理
 - 额度/配置管理 → admin 处理
 

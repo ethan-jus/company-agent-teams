@@ -3,44 +3,53 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>公司 AI Agent 管理面板</title>
+<title>AI Agent 管理面板</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f6fa; color: #333; padding: 24px; }
-.container { max-width: 1200px; margin: 0 auto; }
-h1 { font-size: 24px; margin-bottom: 24px; }
-h2 { font-size: 18px; margin-bottom: 12px; }
-.card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #0f172a; color: #e2e8f0; padding: 32px; }
+.container { max-width: 1280px; margin: 0 auto; }
+h1 { font-size: 28px; font-weight: 700; margin-bottom: 28px; color: #f1f5f9; }
+h2 { font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #cbd5e1; }
+.card { background: #1e293b; border-radius: 16px; padding: 28px; margin-bottom: 24px; border: 1px solid #334155; }
 table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-th { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; }
-.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
-.badge-green { background: #e8f5e9; color: #2e7d32; }
-.badge-red { background: #fbe9e7; color: #c62828; }
-.progress { background: #e0e0e0; border-radius: 4px; height: 8px; width: 120px; display: inline-block; vertical-align: middle; }
-.progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
-.btn { display: inline-block; padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; }
-.btn-primary { background: #1976d2; color: #fff; }
-.btn-danger { background: #d32f2f; color: #fff; }
-.btn-sm { padding: 4px 10px; font-size: 12px; }
-.quota-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px; }
-.quota-card { background: #fafafa; border-radius: 8px; padding: 16px; border: 1px solid #eee; }
-.quota-card h3 { font-size: 15px; margin-bottom: 8px; }
-.quota-card .value { font-size: 24px; font-weight: 700; color: #1976d2; }
-.quota-card .label { font-size: 12px; color: #999; }
-.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal-content { background: #fff; border-radius: 12px; padding: 24px; min-width: 400px; max-width: 600px; }
-.modal-content h2 { margin-bottom: 16px; }
-.form-group { margin-bottom: 12px; }
-.form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
-.form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+th, td { text-align: left; padding: 14px 16px; border-bottom: 1px solid #334155; }
+th { font-weight: 600; color: #94a3b8; font-size: 13px; letter-spacing: 0.5px; }
+td { font-size: 15px; }
+tr:hover { background: rgba(255,255,255,0.03); }
+.badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+.badge-green { background: rgba(34,197,94,0.15); color: #4ade80; }
+.badge-red { background: rgba(239,68,68,0.15); color: #f87171; }
+.progress-wrap { width: 140px; display: inline-block; vertical-align: middle; }
+.progress { background: #334155; border-radius: 6px; height: 10px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 6px; transition: width .4s ease; }
+.btn { display: inline-block; padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: all .2s; }
+.btn-primary { background: #3b82f6; color: #fff; }
+.btn-primary:hover { background: #2563eb; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-sm { padding: 5px 14px; font-size: 13px; }
+.btn-ghost { background: transparent; color: #94a3b8; border: 1px solid #475569; }
+.btn-ghost:hover { background: #334155; color: #e2e8f0; }
+.quota-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.quota-card { background: #0f172a; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+.quota-card h3 { font-size: 16px; margin-bottom: 12px; color: #f1f5f9; }
+.quota-card .value { font-size: 32px; font-weight: 700; color: #60a5fa; }
+.quota-card .label { font-size: 14px; color: #64748b; margin-top: 4px; }
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal-content { background: #1e293b; border-radius: 16px; padding: 32px; min-width: 440px; max-width: 600px; border: 1px solid #334155; }
+.modal-content h2 { margin-bottom: 20px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 14px; color: #94a3b8; margin-bottom: 6px; }
+.form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 1px solid #475569; border-radius: 8px; font-size: 15px; background: #0f172a; color: #e2e8f0; outline: none; }
+.form-group input:focus { border-color: #3b82f6; }
+.form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
 .hidden { display: none; }
-.tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #eee; }
-.tab { padding: 10px 20px; cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-.tab.active { border-bottom-color: #1976d2; color: #1976d2; font-weight: 600; }
-.toast { position: fixed; bottom: 24px; right: 24px; background: #333; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 200; opacity: 0; transition: opacity .3s; }
+.tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #1e293b; border-radius: 12px; padding: 4px; border: 1px solid #334155; width: fit-content; }
+.tab { padding: 10px 24px; cursor: pointer; font-size: 14px; border-radius: 8px; transition: all .2s; color: #94a3b8; }
+.tab.active { background: #3b82f6; color: #fff; font-weight: 500; }
+.toast { position: fixed; bottom: 32px; right: 32px; background: #1e293b; color: #e2e8f0; padding: 14px 24px; border-radius: 12px; font-size: 14px; z-index: 200; opacity: 0; transition: opacity .3s; border: 1px solid #334155; }
 .toast.show { opacity: 1; }
+code { font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 13px; color: #64748b; }
 </style>
 </head>
 <body>
@@ -58,17 +67,16 @@ th { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; 
       <table>
         <thead>
           <tr>
-            <th>飞书名称</th>
-            <th>Agent 名称</th>
+            <th>用户</th>
+            <th>Agent</th>
             <th>角色</th>
-            <th>open_id</th>
             <th>状态</th>
-            <th>月用量</th>
+            <th>已用 / 总额度</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody id="user-table-body">
-          <tr><td colspan="7" style="text-align:center;color:#999;">加载中...</td></tr>
+          <tr><td colspan="6" style="text-align:center;color:#64748b;padding:40px;">加载中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -76,9 +84,8 @@ th { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; 
 
   <div id="tab-quota" class="tab-content hidden">
     <div class="card">
-      <h2>每用户用量</h2>
       <div class="quota-grid" id="quota-grid">
-        <div style="color:#999;text-align:center;padding:40px;">加载中...</div>
+        <div style="color:#64748b;text-align:center;padding:60px;">加载中...</div>
       </div>
       <button class="btn btn-danger" onclick="resetAllQuota()">重置所有月度计数</button>
     </div>
@@ -89,7 +96,7 @@ th { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; 
       <h2>全局默认额度</h2>
       <div class="form-group">
         <label>月度 Token 上限</label>
-        <input type="number" id="default-monthly-tokens" value="5000000" />
+        <input type="number" id="default-monthly-tokens" value="10000000" />
       </div>
       <div class="form-group">
         <label>每分钟请求上限</label>
@@ -97,7 +104,7 @@ th { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; 
       </div>
       <div class="form-group">
         <label>每日告警 Token 数</label>
-        <input type="number" id="default-warn" value="400000" />
+        <input type="number" id="default-warn" value="800000" />
       </div>
       <button class="btn btn-primary" onclick="saveDefaults()">保存全局设置</button>
     </div>
@@ -112,7 +119,7 @@ th { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; 
     <div class="form-group"><label>月度 Token 上限</label><input id="edit-quota" type="number" /></div>
     <div class="form-group"><label>每分钟请求上限</label><input id="edit-rate" type="number" /></div>
     <div class="form-actions">
-      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-ghost" onclick="closeModal()">取消</button>
       <button class="btn btn-primary" onclick="saveUser()">保存</button>
     </div>
   </div>
@@ -121,13 +128,17 @@ th { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; 
 <div class="toast" id="toast"></div>
 
 <script>
-let users = [];
-let editingOpenId = null;
+function fmtNum(n) {
+  n = n || 0;
+  if (n >= 100000000) return (n / 100000000).toFixed(1) + '亿';
+  if (n >= 10000) return (n / 10000).toFixed(n % 10000 === 0 ? 0 : 1) + '万';
+  return n.toLocaleString();
+}
 
 function showToast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg; t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2000);
+  setTimeout(() => t.classList.remove("show"), 2500);
 }
 
 document.querySelectorAll(".tab").forEach(tab => {
@@ -136,8 +147,11 @@ document.querySelectorAll(".tab").forEach(tab => {
     tab.classList.add("active");
     document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
     document.getElementById("tab-" + tab.dataset.tab).classList.remove("hidden");
+    if (tab.dataset.tab === 'users' || tab.dataset.tab === 'quota') loadUsers();
   });
 });
+
+let users = [], editingOpenId = null;
 
 async function loadUsers() {
   const resp = await fetch("/api/users");
@@ -145,51 +159,51 @@ async function loadUsers() {
   users = data.users;
   renderUsers();
   renderQuota();
-  document.getElementById("default-monthly-tokens").value = data.defaults.monthly_tokens;
-  document.getElementById("default-rate").value = data.defaults.rate_per_minute;
-  document.getElementById("default-warn").value = data.defaults.daily_warn_tokens;
 }
 
 function renderUsers() {
   const tbody = document.getElementById("user-table-body");
   if (users.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">暂无用户，新用户通过飞书自动注册</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:40px;">暂无用户，新用户通过飞书自动注册</td></tr>';
     return;
   }
-  tbody.innerHTML = users.map(u => `
-    <tr>
-      <td><strong>${u.feishu_name || '-'}</strong></td>
+  tbody.innerHTML = users.map(u => {
+    const pct = Math.min(u.percent, 100);
+    const barColor = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#22c55e';
+    return `<tr>
+      <td><strong style="font-size:16px;">${u.feishu_name || '-'}</strong></td>
       <td>${u.agent_name || '-'}</td>
       <td>${u.role || '-'}</td>
-      <td style="font-family:monospace;font-size:12px;color:#999;">${u.open_id.slice(0,20)}...</td>
       <td><span class="badge ${u.enabled ? 'badge-green' : 'badge-red'}">${u.enabled ? '启用' : '停用'}</span></td>
       <td>
-        <div class="progress"><div class="progress-fill" style="width:${Math.min(u.percent,100)}%;background:${u.percent > 90 ? '#d32f2f' : u.percent > 70 ? '#f57c00' : '#1976d2'}"></div></div>
-        ${(u.monthly_tokens || 0).toLocaleString()} / ${(u.monthly_limit || 0).toLocaleString()}
+        <span class="progress-wrap">
+          <div class="progress"><div class="progress-fill" style="width:${pct}%;background:${barColor};"></div></div>
+        </span>
+        <span style="font-size:14px;color:#94a3b8;margin-left:8px;">${fmtNum(u.monthly_tokens)} / ${fmtNum(u.monthly_limit)}</span>
       </td>
       <td>
         <button class="btn btn-primary btn-sm" onclick="editUser('${u.open_id}')">编辑</button>
         <button class="btn btn-sm ${u.enabled ? 'btn-danger' : 'btn-primary'}" onclick="toggleUser('${u.open_id}', ${!u.enabled})">${u.enabled ? '停用' : '启用'}</button>
       </td>
-    </tr>
-  `).join("");
+    </tr>`;
+  }).join("");
 }
 
 function renderQuota() {
   const grid = document.getElementById("quota-grid");
   if (users.length === 0) {
-    grid.innerHTML = '<div style="color:#999;text-align:center;padding:40px;">暂无数据</div>';
+    grid.innerHTML = '<div style="color:#64748b;text-align:center;padding:60px;">暂无数据</div>';
     return;
   }
   grid.innerHTML = users.map(u => {
     const pct = Math.min(u.percent, 100);
-    const color = pct > 90 ? '#d32f2f' : pct > 70 ? '#f57c00' : '#1976d2';
+    const barColor = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#22c55e';
     return `<div class="quota-card">
-      <h3>${u.feishu_name || u.agent_name || u.open_id}</h3>
-      <div class="value">${(u.monthly_tokens || 0).toLocaleString()}</div>
-      <div class="label">/${(u.monthly_limit || 0).toLocaleString()} Token（${u.percent}%）</div>
-      <div style="margin-top:8px;background:#e0e0e0;border-radius:4px;height:6px;">
-        <div style="height:100%;border-radius:4px;width:${pct}%;background:${color};"></div>
+      <h3>${u.feishu_name || u.agent_name || u.open_id} · ${u.agent_name || ''}</h3>
+      <div class="value">${fmtNum(u.monthly_tokens)}</div>
+      <div class="label">/ ${fmtNum(u.monthly_limit)} Token（${u.percent}%）</div>
+      <div style="margin-top:12px;background:#334155;border-radius:6px;height:10px;overflow:hidden;">
+        <div style="height:100%;border-radius:6px;width:${pct}%;background:${barColor};transition:width .4s;"></div>
       </div>
     </div>`;
   }).join("");
@@ -201,7 +215,7 @@ function editUser(openId) {
   editingOpenId = openId;
   document.getElementById("edit-agent-name").value = u.agent_name || "";
   document.getElementById("edit-role").value = u.role || "";
-  document.getElementById("edit-quota").value = u.monthly_limit || 5000000;
+  document.getElementById("edit-quota").value = u.monthly_limit || 10000000;
   document.getElementById("edit-rate").value = 10;
   document.getElementById("edit-modal").classList.remove("hidden");
 }
@@ -217,9 +231,10 @@ async function saveUser() {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
+      agent_name: document.getElementById("edit-agent-name").value,
       role: document.getElementById("edit-role").value,
       quota: {
-        monthly_tokens: parseInt(document.getElementById("edit-quota").value) || 5000000,
+        monthly_tokens: parseInt(document.getElementById("edit-quota").value) || 10000000,
         rate_per_minute: parseInt(document.getElementById("edit-rate").value) || 10,
       }
     })
@@ -250,9 +265,9 @@ async function saveDefaults() {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
-      monthly_tokens: parseInt(document.getElementById("default-monthly-tokens").value) || 5000000,
+      monthly_tokens: parseInt(document.getElementById("default-monthly-tokens").value) || 10000000,
       rate_per_minute: parseInt(document.getElementById("default-rate").value) || 10,
-      daily_warn_tokens: parseInt(document.getElementById("default-warn").value) || 400000,
+      daily_warn_tokens: parseInt(document.getElementById("default-warn").value) || 800000,
     })
   });
   showToast("全局设置已保存");

@@ -17,10 +17,14 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone
 from urllib.parse import urlparse, parse_qs
 
+import os as _os
+_SCRIPT_DIR = _os.path.dirname(_os.path.abspath(__file__))
+BASE_DIR = _os.path.dirname(_SCRIPT_DIR)  # 项目根目录
+
 DEEPSEEK_API = "https://api.deepseek.com"
 PROXY_PORT = 8800
-DB_PATH = "quota.db"
-CONFIG_PATH = "../config/quota-defaults.json"
+DB_PATH = _os.path.join(BASE_DIR, "quota.db")
+CONFIG_PATH = _os.path.join(BASE_DIR, "config", "quota-defaults.json")
 
 
 # ── 数据库 ──────────────────────────────────────────────

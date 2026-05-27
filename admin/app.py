@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 CONFIG_DIR = BASE_DIR / "config"
 PROXY_DIR = BASE_DIR / "proxy"
 AGENTS_DIR = BASE_DIR / "agents"
-DB_PATH = PROXY_DIR / "quota.db"
+DB_PATH = BASE_DIR / "quota.db"  # 与 proxy.py 保持一致
 
 
 def read_json(path):
@@ -49,8 +49,9 @@ def list_users():
     quota_data = get_quota_data()
     users = []
     for open_id, info in routing.items():
-        agent_id = info.get("agent_name", open_id)
-        tokens = quota_data.get(agent_id, 0)
+        # 兼容两种 agent_id：open_id 和 agent_name（历史数据两种都有存）
+        agent_name = info.get("agent_name", "")
+        tokens = quota_data.get(open_id, 0) or quota_data.get(agent_name, 0)
         limit = info.get("quota", {}).get("monthly_tokens", defaults["monthly_tokens"])
         users.append({
             "open_id": open_id,
@@ -74,6 +75,8 @@ def update_user(open_id):
         return jsonify({"error": "user not found"}), 404
     if "enabled" in data:
         routing[open_id]["enabled"] = data["enabled"]
+    if "agent_name" in data and data["agent_name"]:
+        routing[open_id]["agent_name"] = data["agent_name"]
     if "role" in data:
         routing[open_id]["role"] = data["role"]
     if "quota" in data:
