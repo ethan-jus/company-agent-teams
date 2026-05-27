@@ -65,7 +65,6 @@ agents["admin"] = {
 cmd = [
     "claude",
     "--dangerously-load-development-channels", "plugin:feishu@claude-code-feishu-channel",
-    "--settings", str(BASE / "config" / "agent-teams-settings.json"),
     "--agent", "admin",
     "--agents", json.dumps(agents, ensure_ascii=False),
 ]
