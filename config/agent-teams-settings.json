@@ -12,7 +12,7 @@
     ]
   },
   "env": {
-    "ANTHROPIC_BASE_URL": "http://localhost:8800/anthropic",
+    "ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic",
     "ANTHROPIC_AUTH_TOKEN": "sk-454090e78a2a4c7cb9d47c60aaea4b63",
     "ANTHROPIC_MODEL": "DeepSeek-V4-Flash[1M]"
   }
