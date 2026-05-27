@@ -235,6 +235,10 @@ class ProxyHandler(BaseHTTPRequestHandler):
             return
 
         # ── 转发 Anthropic 消息 API ──
+        if path == "/anthropic/models":
+            self._send_json(200, {"data": [{"id": "DeepSeek-V4-Flash[1M]"}]})
+            return
+
         if path == "/anthropic/messages":
             body = self._read_body()
             req = urllib.request.Request(
