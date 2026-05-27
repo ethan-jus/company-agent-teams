@@ -248,7 +248,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req) as resp:
+                with urllib.request.urlopen(req, timeout=60) as resp:
                     resp_body = json.loads(resp.read())
                     # 记录用量
                     if "usage" in resp_body:
@@ -261,7 +261,12 @@ class ProxyHandler(BaseHTTPRequestHandler):
                         )
                     self._send_json(resp.status, resp_body)
             except urllib.error.HTTPError as e:
-                self._send_json(e.code, json.loads(e.read()))
+                try:
+                    self._send_json(e.code, json.loads(e.read()))
+                except Exception:
+                    self._send_json(e.code, {"error": "upstream_error"})
+            except Exception as e:
+                self._send_json(502, {"error": "proxy_error", "detail": str(e)})
             return
 
         self._send_json(404, {"error": "not found"})
