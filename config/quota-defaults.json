@@ -1,0 +1,6 @@
+{
+  "monthly_tokens": 5000000,
+  "rate_per_minute": 10,
+  "daily_warn_tokens": 400000,
+  "enabled": true
+}
