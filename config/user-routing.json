@@ -1,1 +1,41 @@
-{}
+{
+  "ou_a148d0531728d14c6eb025ecb4059bde": {
+    "feishu_name": "赵奕然",
+    "agent_name": "小然",
+    "role": "运营部",
+    "open_id": "ou_a148d0531728d14c6eb025ecb4059bde",
+    "enabled": true,
+    "quota": {
+      "monthly_tokens": 5000000,
+      "rate_per_minute": 10
+    },
+    "created_at": "2026-05-27T15:35:00",
+    "agent_dir": "agents/ou_a148d0531728d14c6eb025ecb4059bde/"
+  },
+  "ou_22c7cc98e84fe75362ed9d531cffb40f": {
+    "feishu_name": "梁晓敏",
+    "agent_name": "小敏",
+    "role": "人力资源部",
+    "open_id": "ou_22c7cc98e84fe75362ed9d531cffb40f",
+    "enabled": true,
+    "quota": {
+      "monthly_tokens": 5000000,
+      "rate_per_minute": 10
+    },
+    "created_at": "2026-05-27T15:35:00",
+    "agent_dir": "agents/ou_22c7cc98e84fe75362ed9d531cffb40f/"
+  },
+  "ou_096c8d3ec8ef9b018f3f4da81de28c6c": {
+    "feishu_name": "王桐",
+    "agent_name": "小桐",
+    "role": "运营部",
+    "open_id": "ou_096c8d3ec8ef9b018f3f4da81de28c6c",
+    "enabled": true,
+    "quota": {
+      "monthly_tokens": 5000000,
+      "rate_per_minute": 10
+    },
+    "created_at": "2026-05-27T15:35:00",
+    "agent_dir": "agents/ou_096c8d3ec8ef9b018f3f4da81de28c6c/"
+  }
+}
