@@ -1,5 +1,5 @@
 """启动系统 — 后台 Dispatcher + 主 Claude Code（飞书消息路由）"""
-import json, subprocess, threading, time
+import json, subprocess, threading, time, sys
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
@@ -8,13 +8,11 @@ ROUTING = json.loads((BASE / "config" / "user-routing.json").read_text("utf-8"))
 # ── 1. 启动 Dispatcher（后台，管理各 Agent 进程）──
 dispatcher = subprocess.Popen(
     ["C:/Python314/python.exe", str(BASE / "scripts" / "agent_dispatcher.py")],
-    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
 )
 time.sleep(3)
-
-# 读取 dispatcher 输出确认启动成功
-line = dispatcher.stdout.readline() if dispatcher.stdout else ""
-print(line)
+if dispatcher.poll() is not None:
+    print("ERROR: Dispatcher failed to start")
+    sys.exit(1)
 
 # ── 2. 构建主 session 的系统提示 ──
 user_list = "\n".join([
