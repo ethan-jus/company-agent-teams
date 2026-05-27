@@ -1,64 +1,87 @@
-"""启动 Claude Code（多用户模式）—— 根据飞书消息发送者自动切换身份"""
+"""启动 Agent Teams — admin 路由飞书消息给对应 Agent"""
 import json, subprocess
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
-AGENCY = (BASE / "config" / "AGENCY.md").read_text("utf-8")
+AGENCY = (BASE / "config" / "AGENCY.md").read_text("utf-8").strip()
 ROUTING = json.loads((BASE / "config" / "user-routing.json").read_text("utf-8"))
 
-# 构建每个用户的身份摘要
-user_profiles = []
-for oid, info in ROUTING.items():
-    agent_dir = BASE / "agents" / oid
+agents = {}
+
+# admin Agent — 消息路由 + 系统管理
+agents["admin"] = {
+    "description": "系统管理员 / 消息路由",
+    "prompt": f"""# admin Agent — 系统管理员 & 消息路由
+
+## 核心职责
+
+### 1. 飞书消息路由（最重要）
+当飞书消息通过 channel 到达时：
+1. 查看 <channel user="ou_xxx"> 中的 open_id
+2. 打开 config/user-routing.json 查对应用户
+3. 用 @Agent名 将请求委托给对应用户的个人 Agent
+4. 例如：赵奕然发来消息 → @"小然" 赵奕然说：...
+
+### 2. 跨 Agent 写入
+其他 Agent 需要修改配置或跨 Agent 数据时，由 admin 执行。
+
+### 3. 用户注册
+新用户发消息时，执行注册流程。
+
+## 各 Agent 对应关系
+""",
+}
+
+for open_id, info in ROUTING.items():
+    agent_dir = BASE / "agents" / open_id
     identity = (agent_dir / "IDENTITY.md").read_text("utf-8") if (agent_dir / "IDENTITY.md").exists() else ""
     sop = (agent_dir / "SOP.md").read_text("utf-8") if (agent_dir / "SOP.md").exists() else ""
-    user_profiles.append(f"## {info['agent_name']}（{info['feishu_name']} - {info['role']}）\n\n{identity}\n\n{sop}")
 
-profiles_text = "\n---\n".join(user_profiles)
+    agents[info["agent_name"]] = {
+        "description": f"{info['feishu_name']} 的个人助手 - {info['role']}",
+        "prompt": f"""{identity}
 
-system_prompt = f"""# 公司 AI 助手 — 多用户模式
+你的专属工作流程（SOP）：
+{sop}
 
-你是公司的 AI 助手集群，可以同时为多个员工服务。
-每个员工有自己的个人 AI 助手（独立的身份、记忆、知识库）。
-根据飞书消息发送者（open_id），切换到对应的助手身份。
+全局规章（必须遵守）：
+{AGENCY[:800]}
 
-## 切换规则
+## 协作方式
+- 当 admin 用 @{info['agent_name']} 把任务委托给你时，处理该任务
+- 处理完毕后直接回复（回复会自动通过飞书 channel 发送给用户）
+- 如果需要其他 Agent 的信息，用 @Agent名 请求协作
+- 需要写入其他 Agent 数据时，请 @admin 处理
+""",
+    }
 
-1. 飞书消息带有 <channel user="ou_xxx"> 标记，user 字段就是发送者的 open_id
-2. 查 config/user-routing.json 找到对应的 feishu_name 和 agent_name
-3. 读取 agents/{{open_id}}/IDENTITY.md 作为当前身份
-4. 读取 agents/{{open_id}}/SOP.md 作为当前工作流程
-5. 个人记忆存取 agents/{{open_id}}/memory/ 目录
-6. 每次回复后调用额度代理上报：curl http://localhost:8800/api/quota/report -d {{"agent_id":"当前agent名","tokens":xx}}
+    # 在 admin 的 prompt 中追加用户映射
+    agents["admin"]["prompt"] += f"\n- <channel user=\"{open_id}\"> → @{info['agent_name']}（{info['feishu_name']}）"
+
+agents["admin"]["prompt"] += f"""
+
+## 路由规则
+- 查不到 open_id 的用户 → 触发注册流程
+- 跨 Agent 写入请求 → admin 亲自处理
+- 其他管理操作（额度、配置） → admin 亲自处理
 
 ## 规章
-
-{AGENCY}
-
-## 用户列表
-
-{profiles_text}
+{AGENCY[:800]}
 """
-
-# 写入临时系统提示文件（避免命令行太长）
-prompt_file = BASE / ".claude_system_prompt.md"
-prompt_file.write_text(system_prompt, "utf-8")
 
 cmd = [
     "claude",
     "--dangerously-load-development-channels", "plugin:feishu@claude-code-feishu-channel",
     "--settings", str(BASE / "config" / "agent-teams-settings.json"),
-    "--system-prompt-file", str(prompt_file),
+    "--agent", "admin",
+    "--agents", json.dumps(agents, ensure_ascii=False),
 ]
 
 print("=" * 50)
-print("启动公司 AI 助手（多用户模式）")
-for oid, info in ROUTING.items():
-    print(f"  {info['agent_name']} ← {info['feishu_name']} ({info['role']})")
-print(f"  系统规章: config/AGENCY.md")
+print("Agent Teams 启动，成员：")
+for name, cfg in agents.items():
+    print(f"  [{name}] {cfg['description']}")
+print("  └ admin 负责路由飞书消息 @对应Agent")
 print("=" * 50)
 
 subprocess.run(cmd)
-
-# 清理临时文件
-prompt_file.unlink(missing_ok=True)
