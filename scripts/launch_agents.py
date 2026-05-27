@@ -41,6 +41,7 @@ for open_id, info in ROUTING.items():
 # 构建启动命令
 cmd = [
     "claude",
+    "--dangerously-load-development-channels", "plugin:feishu@claude-code-feishu-channel",
     "--settings", str(BASE / "config" / "agent-teams-settings.json"),
     "--agents", json.dumps(agents, ensure_ascii=False),
 ]
